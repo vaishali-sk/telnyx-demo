@@ -177,6 +177,7 @@ export function useWebRTC() {
 
     try {
       setCallState(prev => ({ ...prev, callStatus: 'connecting' }));
+      console.log("======= Making call to:", phoneNumber);
       await client.makeCall(phoneNumber);
     } catch (error) {
       console.error('Failed to make call:', error);

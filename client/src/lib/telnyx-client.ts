@@ -148,6 +148,7 @@ export class TelnyxClient {
   }
 
   makeCall(destination: string): Promise<any> {
+    console.log(`========Making call to ${destination}...`);
     const call = this.client.newCall({
       destination_number: destination,
       caller_id_number: '', // Will be set by Telnyx
