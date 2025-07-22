@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCallLogSchema, insertSettingsSchema, insertContactSchema } from "@shared/schema";
+import { insertCallLogSchema, insertSettingsSchema, insertContactSchema, insertConferenceSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -84,6 +84,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete contact" });
+    }
+  });
+
+  // Conference endpoints
+  app.get("/api/conferences", async (_req, res) => {
+    try {
+      const conferences = await storage.getConferences();
+      res.json(conferences);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch conferences" });
+    }
+  });
+
+  app.post("/api/conferences", async (req, res) => {
+    try {
+      const conferenceData = insertConferenceSchema.parse(req.body);
+      const conference = await storage.createConference(conferenceData);
+      res.json(conference);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid conference data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create conference" });
+      }
+    }
+  });
+
+  app.put("/api/conferences/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const conference = await storage.updateConference(id, updates);
+      if (!conference) {
+        res.status(404).json({ message: "Conference not found" });
+        return;
+      }
+      res.json(conference);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update conference" });
     }
   });
 

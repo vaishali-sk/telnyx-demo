@@ -6,17 +6,21 @@ export interface TelnyxConfig {
 }
 
 export interface CallEvent {
-  type: 'incoming' | 'connecting' | 'connected' | 'ended' | 'failed';
+  type: 'incoming' | 'connecting' | 'connected' | 'ended' | 'failed' | 'conference_created' | 'participant_joined' | 'participant_left';
   callId?: string;
   callerName?: string;
   callerNumber?: string;
   duration?: number;
+  conferenceId?: string;
+  participantNumber?: string;
 }
 
 export class TelnyxClient {
   private client: any;
   private activeCall: any = null;
   private eventListeners: ((event: CallEvent) => void)[] = [];
+  private activeCalls: Map<string, any> = new Map();
+  private activeConferenceId: string | null = null;
 
   constructor(config: TelnyxConfig) {
     this.client = new TelnyxRTC({
@@ -131,8 +135,97 @@ export class TelnyxClient {
     }
   }
 
+  // Conference call methods
+  createConference(): string | null {
+    if (!this.activeCall) return null;
+    
+    try {
+      const conferenceId = `conf_${Date.now()}`;
+      this.activeConferenceId = conferenceId;
+      
+      // Convert current call to conference
+      this.activeCall.conference = true;
+      this.activeCall.conferenceId = conferenceId;
+      
+      this.notifyListeners({
+        type: 'conference_created',
+        callId: this.activeCall.id,
+        conferenceId: conferenceId
+      });
+      
+      return conferenceId;
+    } catch (error) {
+      console.error('Failed to create conference:', error);
+      return null;
+    }
+  }
+
+  addToConference(phoneNumber: string): Promise<any> | null {
+    if (!this.activeConferenceId) return null;
+    
+    try {
+      const conferenceCall = this.client.newCall({
+        destination_number: phoneNumber,
+        caller_id_number: '',
+        caller_id_name: '',
+        conference: true,
+        conferenceId: this.activeConferenceId
+      });
+      
+      this.activeCalls.set(conferenceCall.id, conferenceCall);
+      
+      this.notifyListeners({
+        type: 'participant_joined',
+        callId: conferenceCall.id,
+        conferenceId: this.activeConferenceId,
+        participantNumber: phoneNumber
+      });
+      
+      return conferenceCall;
+    } catch (error) {
+      console.error('Failed to add participant to conference:', error);
+      return null;
+    }
+  }
+
+  removeFromConference(callId: string): void {
+    const call = this.activeCalls.get(callId);
+    if (call) {
+      call.hangup();
+      this.activeCalls.delete(callId);
+      
+      this.notifyListeners({
+        type: 'participant_left',
+        callId: callId,
+        conferenceId: this.activeConferenceId
+      });
+    }
+  }
+
+  endConference(): void {
+    if (this.activeCall) {
+      this.activeCall.hangup();
+    }
+    
+    this.activeCalls.forEach((call) => {
+      call.hangup();
+    });
+    
+    this.activeCalls.clear();
+    this.activeConferenceId = null;
+    this.activeCall = null;
+  }
+
   getActiveCall() {
     return this.activeCall;
+  }
+
+  getActiveCalls() {
+    return Array.from(this.activeCalls.values());
+  }
+
+  getActiveConferenceId() {
+    return this.activeConferenceId;
   }
 
   addEventListener(listener: (event: CallEvent) => void): void {

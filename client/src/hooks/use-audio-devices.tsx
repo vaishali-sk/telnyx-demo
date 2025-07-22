@@ -14,8 +14,17 @@ export function useAudioDevices() {
   useEffect(() => {
     const getDevices = async () => {
       try {
+        // Check if mediaDevices is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          console.warn('MediaDevices API not supported');
+          return;
+        }
+
         // Request permissions first
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Stop the stream after getting permission
+        stream.getTracks().forEach(track => track.stop());
         
         const deviceList = await navigator.mediaDevices.enumerateDevices();
         const audioDevices = deviceList
@@ -40,6 +49,13 @@ export function useAudioDevices() {
         }
       } catch (error) {
         console.error('Error getting audio devices:', error);
+        // Set some default devices even if permission is denied
+        setDevices([
+          { deviceId: 'default', label: 'Default Microphone', kind: 'audioinput' },
+          { deviceId: 'default', label: 'Default Speaker', kind: 'audiooutput' }
+        ]);
+        setSelectedMicrophone('default');
+        setSelectedSpeaker('default');
       }
     };
 

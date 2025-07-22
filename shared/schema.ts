@@ -16,6 +16,18 @@ export const callLogs = pgTable("call_logs", {
   status: text("status").notNull(), // 'completed' | 'missed' | 'failed'
   duration: integer("duration").notNull().default(0), // seconds
   timestamp: timestamp("timestamp").notNull().defaultNow(),
+  conferenceId: text("conference_id"), // For conference calls
+  isConferenceCall: boolean("is_conference_call").notNull().default(false),
+});
+
+export const conferences = pgTable("conferences", {
+  id: serial("id").primaryKey(),
+  conferenceId: text("conference_id").notNull().unique(),
+  hostNumber: text("host_number").notNull(),
+  participantNumbers: text("participant_numbers").array().notNull().default([]),
+  status: text("status").notNull(), // 'active' | 'ended'
+  startTime: timestamp("start_time").notNull().defaultNow(),
+  endTime: timestamp("end_time"),
 });
 
 export const settings = pgTable("settings", {
@@ -52,6 +64,11 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   id: true,
 });
 
+export const insertConferenceSchema = createInsertSchema(conferences).omit({
+  id: true,
+  startTime: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type CallLog = typeof callLogs.$inferSelect;
@@ -60,3 +77,5 @@ export type Settings = typeof settings.$inferSelect;
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
+export type Conference = typeof conferences.$inferSelect;
+export type InsertConference = z.infer<typeof insertConferenceSchema>;
