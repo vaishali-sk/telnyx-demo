@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(240, 10%, 3.9%);
+  --muted: hsl(240, 4.8%, 95.9%);
+  --muted-foreground: hsl(240, 3.8%, 46.1%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(240, 10%, 3.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(240, 10%, 3.9%);
+  --border: hsl(240, 5.9%, 90%);
+  --input: hsl(240, 5.9%, 90%);
+  --primary: hsl(240, 9%, 89%);
+  --primary-foreground: hsl(240, 5.9%, 10%);
+  --secondary: hsl(240, 4.8%, 95.9%);
+  --secondary-foreground: hsl(240, 5.9%, 10%);
+  --accent: hsl(240, 4.8%, 95.9%);
+  --accent-foreground: hsl(240, 5.9%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(240, 5%, 64.9%);
+  --radius: 0.5rem;
+
+  /* Softphone specific colors */
+  --softphone-bg: hsl(222, 84%, 4.9%);
+  --softphone-panel: hsl(217, 32.6%, 17.5%);
+  --softphone-card: hsl(215, 20.2%, 25.1%);
+  --softphone-border: hsl(217, 10.6%, 33.9%);
+  --softphone-accent: hsl(217, 91.2%, 59.8%);
+  --softphone-success: hsl(142, 76%, 36.3%);
+  --softphone-warning: hsl(45, 93%, 47.5%);
+  --softphone-error: hsl(0, 84.2%, 60.2%);
+  --softphone-text-primary: hsl(210, 40%, 98%);
+  --softphone-text-secondary: hsl(215, 13.8%, 65.1%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(0, 0%, 98%);
+  --primary-foreground: hsl(240, 5.9%, 10%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--softphone-bg);
+    color: var(--softphone-text-primary);
+  }
+}
+
+@layer utilities {
+  .bg-softphone-bg {
+    background-color: var(--softphone-bg);
+  }
+  
+  .bg-softphone-panel {
+    background-color: var(--softphone-panel);
+  }
+  
+  .bg-softphone-card {
+    background-color: var(--softphone-card);
+  }
+  
+  .border-softphone-border {
+    border-color: var(--softphone-border);
+  }
+  
+  .bg-softphone-accent {
+    background-color: var(--softphone-accent);
+  }
+  
+  .text-softphone-accent {
+    color: var(--softphone-accent);
+  }
+  
+  .bg-softphone-success {
+    background-color: var(--softphone-success);
+  }
+  
+  .text-softphone-success {
+    color: var(--softphone-success);
+  }
+  
+  .bg-softphone-warning {
+    background-color: var(--softphone-warning);
+  }
+  
+  .text-softphone-warning {
+    color: var(--softphone-warning);
+  }
+  
+  .bg-softphone-error {
+    background-color: var(--softphone-error);
+  }
+  
+  .text-softphone-error {
+    color: var(--softphone-error);
+  }
+  
+  .text-softphone-text-primary {
+    color: var(--softphone-text-primary);
+  }
+  
+  .text-softphone-text-secondary {
+    color: var(--softphone-text-secondary);
+  }
+}
