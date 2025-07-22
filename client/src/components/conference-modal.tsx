@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { X, User, MicOff, UserMinus, Crown, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface ConferenceModalProps {
   onClose: () => void;
+  onAddParticipant?: (phoneNumber: string) => void;
+  onRemoveParticipant?: (callId: string) => void;
+  onEndConference?: () => void;
 }
 
 interface Participant {
@@ -15,23 +19,14 @@ interface Participant {
   isHost: boolean;
 }
 
-export function ConferenceModal({ onClose }: ConferenceModalProps) {
+export function ConferenceModal({ 
+  onClose, 
+  onAddParticipant, 
+  onRemoveParticipant,
+  onEndConference 
+}: ConferenceModalProps) {
   const [newParticipantNumber, setNewParticipantNumber] = useState('');
   const [participants] = useState<Participant[]>([
-    {
-      id: '1',
-      name: 'John Anderson',
-      number: '+1 (555) 123-4567',
-      isMuted: false,
-      isHost: false,
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      number: '+1 (555) 987-6543',
-      isMuted: true,
-      isHost: false,
-    },
     {
       id: '3',
       name: 'You',
@@ -40,12 +35,40 @@ export function ConferenceModal({ onClose }: ConferenceModalProps) {
       isHost: true,
     },
   ]);
+  const { toast } = useToast();
 
   const handleAddParticipant = () => {
     if (newParticipantNumber.trim()) {
-      // Logic to add participant would go here
-      setNewParticipantNumber('');
+      if (onAddParticipant) {
+        onAddParticipant(newParticipantNumber.trim());
+        setNewParticipantNumber('');
+        toast({
+          title: "Adding Participant",
+          description: `Calling ${newParticipantNumber.trim()}...`,
+        });
+      }
     }
+  };
+
+  const handleRemoveParticipant = (participantId: string) => {
+    if (onRemoveParticipant) {
+      onRemoveParticipant(participantId);
+      toast({
+        title: "Participant Removed",
+        description: "Participant has been removed from the conference",
+      });
+    }
+  };
+
+  const handleEndConference = () => {
+    if (onEndConference) {
+      onEndConference();
+      toast({
+        title: "Conference Ended",
+        description: "All participants have been disconnected",
+      });
+    }
+    onClose();
   };
 
   return (
@@ -104,6 +127,7 @@ export function ConferenceModal({ onClose }: ConferenceModalProps) {
                       <Button
                         size="sm"
                         variant="destructive"
+                        onClick={() => handleRemoveParticipant(participant.id)}
                         className="w-8 h-8 bg-softphone-error hover:bg-red-600 p-0"
                       >
                         <UserMinus className="w-3 h-3" />
@@ -137,7 +161,7 @@ export function ConferenceModal({ onClose }: ConferenceModalProps) {
           </div>
 
           <Button
-            onClick={onClose}
+            onClick={handleEndConference}
             variant="destructive"
             className="w-full bg-softphone-error hover:bg-red-600"
           >

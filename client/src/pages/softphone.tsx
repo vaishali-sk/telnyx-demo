@@ -14,7 +14,18 @@ import { useWebRTC } from '@/hooks/use-webrtc';
 export default function Softphone() {
   const [showSettings, setShowSettings] = useState(false);
   const [showConference, setShowConference] = useState(false);
-  const { callState, makeCall, answerCall, hangupCall, toggleMute, toggleHold } = useWebRTC();
+  const { 
+    callState, 
+    makeCall, 
+    answerCall, 
+    hangupCall, 
+    toggleMute, 
+    toggleHold, 
+    createConference,
+    addToConference,
+    removeFromConference,
+    endConference 
+  } = useWebRTC();
 
   const handleDial = (phoneNumber: string) => {
     makeCall(phoneNumber);
@@ -188,7 +199,12 @@ export default function Softphone() {
       )}
 
       {showConference && (
-        <ConferenceModal onClose={() => setShowConference(false)} />
+        <ConferenceModal 
+          onClose={() => setShowConference(false)}
+          onAddParticipant={addToConference}
+          onRemoveParticipant={removeFromConference}
+          onEndConference={endConference}
+        />
       )}
     </div>
   );

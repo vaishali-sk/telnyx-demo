@@ -1,7 +1,9 @@
 import { TelnyxRTC } from '@telnyx/webrtc';
 
 export interface TelnyxConfig {
-  token: string;
+  token?: string;
+  username?: string;
+  password?: string;
   debug?: boolean;
 }
 
@@ -23,11 +25,33 @@ export class TelnyxClient {
   private activeConferenceId: string | null = null;
 
   constructor(config: TelnyxConfig) {
-    this.client = new TelnyxRTC({
-      login_token: config.token,
+    let clientConfig: any = {
       debug: config.debug || false,
-    });
+    };
 
+    // Check if we have SIP credentials or token
+    if (config.username && config.password) {
+      // Use SIP credentials
+      clientConfig = {
+        ...clientConfig,
+        login: config.username,
+        passwd: config.password,
+        realm: 'sip.telnyx.com',
+        host: 'sip.telnyx.com'
+      };
+      console.log('Using SIP credentials for WebRTC connection');
+    } else if (config.token) {
+      // Use token-based authentication
+      clientConfig = {
+        ...clientConfig,
+        login_token: config.token,
+      };
+      console.log('Using token for WebRTC connection');
+    } else {
+      throw new Error('Either SIP credentials (username/password) or token must be provided');
+    }
+
+    this.client = new TelnyxRTC(clientConfig);
     this.setupEventListeners();
   }
 

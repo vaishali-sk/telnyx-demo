@@ -17,16 +17,37 @@ export function useAudioDevices() {
         // Check if mediaDevices is supported
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           console.warn('MediaDevices API not supported');
+          // Set fallback devices
+          setDevices([
+            { deviceId: 'default', label: 'Default Microphone', kind: 'audioinput' },
+            { deviceId: 'default', label: 'Default Speaker', kind: 'audiooutput' }
+          ]);
+          setSelectedMicrophone('default');
+          setSelectedSpeaker('default');
           return;
         }
 
-        // Request permissions first
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // First try to enumerate devices without permission
+        let deviceList = await navigator.mediaDevices.enumerateDevices();
         
-        // Stop the stream after getting permission
-        stream.getTracks().forEach(track => track.stop());
+        // If device labels are empty, we need permission
+        const needsPermission = deviceList.some(device => 
+          (device.kind === 'audioinput' || device.kind === 'audiooutput') && !device.label
+        );
         
-        const deviceList = await navigator.mediaDevices.enumerateDevices();
+        if (needsPermission) {
+          try {
+            // Request permissions
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Stop the stream after getting permission
+            stream.getTracks().forEach(track => track.stop());
+            // Re-enumerate with labels
+            deviceList = await navigator.mediaDevices.enumerateDevices();
+          } catch (permissionError) {
+            console.warn('Permission denied for audio devices, using defaults');
+            // Continue with unlabeled devices
+          }
+        }
         const audioDevices = deviceList
           .filter(device => device.kind === 'audioinput' || device.kind === 'audiooutput')
           .map(device => ({

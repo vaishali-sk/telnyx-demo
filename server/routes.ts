@@ -32,7 +32,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Settings endpoints
   app.get("/api/settings", async (_req, res) => {
     try {
-      const settings = await storage.getSettings();
+      let settings = await storage.getSettings();
+      
+      // If no settings exist but we have an API key in environment, create default settings
+      if (!settings && process.env.TELNYX_API_KEY) {
+        const defaultSettings = {
+          telnyxApiKey: process.env.TELNYX_API_KEY,
+          sipUsername: '',
+          sipPassword: '',
+          connectionServer: 'rtc.telnyx.com',
+          selectedMicrophone: '',
+          selectedSpeaker: '',
+        };
+        settings = await storage.updateSettings(defaultSettings);
+      }
+      
       res.json(settings || {});
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch settings" });
