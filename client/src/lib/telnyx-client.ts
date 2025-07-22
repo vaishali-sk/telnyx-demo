@@ -98,7 +98,32 @@ export class TelnyxClient {
   }
 
   connect(): Promise<void> {
-    return this.client.connect();
+    return new Promise((resolve, reject) => {
+      // Set up one-time listeners for connection result
+      const onReady = () => {
+        this.client.off('telnyx.ready', onReady);
+        this.client.off('telnyx.error', onError);
+        resolve();
+      };
+      
+      const onError = (error: any) => {
+        this.client.off('telnyx.ready', onReady);
+        this.client.off('telnyx.error', onError);
+        reject(new Error(`Telnyx connection failed: ${error.error?.message || 'Unknown error'}`));
+      };
+      
+      this.client.on('telnyx.ready', onReady);
+      this.client.on('telnyx.error', onError);
+      
+      // Initiate connection
+      try {
+        this.client.connect();
+      } catch (error) {
+        this.client.off('telnyx.ready', onReady);
+        this.client.off('telnyx.error', onError);
+        reject(error);
+      }
+    });
   }
 
   disconnect(): void {

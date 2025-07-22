@@ -25,9 +25,9 @@ export function DeviceSettings() {
               <SelectValue placeholder="Select microphone" />
             </SelectTrigger>
             <SelectContent className="bg-softphone-card border-softphone-border">
-              {microphones.map((device) => (
-                <SelectItem key={device.deviceId} value={device.deviceId}>
-                  {device.label}
+              {microphones.filter(device => device.deviceId).map((device) => (
+                <SelectItem key={device.deviceId} value={device.deviceId || 'default'}>
+                  {device.label || 'Default Microphone'}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -42,9 +42,9 @@ export function DeviceSettings() {
               <SelectValue placeholder="Select speaker" />
             </SelectTrigger>
             <SelectContent className="bg-softphone-card border-softphone-border">
-              {speakers.map((device) => (
-                <SelectItem key={device.deviceId} value={device.deviceId}>
-                  {device.label}
+              {speakers.filter(device => device.deviceId).map((device) => (
+                <SelectItem key={device.deviceId} value={device.deviceId || 'default'}>
+                  {device.label || 'Default Speaker'}
                 </SelectItem>
               ))}
             </SelectContent>

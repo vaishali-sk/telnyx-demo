@@ -114,11 +114,14 @@ export function useWebRTC() {
         title: "Connected",
         description: "Successfully connected to Telnyx",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to initialize Telnyx client:', error);
+      const errorMessage = error?.message || 'Failed to connect to Telnyx WebRTC';
       toast({
-        title: "Connection Failed",
-        description: "Failed to connect to Telnyx WebRTC",
+        title: "Connection Failed", 
+        description: errorMessage.includes('Authentication Required') 
+          ? "API key cannot be used for WebRTC. Please use SIP credentials instead."
+          : errorMessage,
         variant: "destructive",
       });
     }
@@ -137,11 +140,12 @@ export function useWebRTC() {
         title: "Connected",
         description: "Successfully connected to Telnyx with SIP credentials",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to initialize Telnyx client with SIP credentials:', error);
+      const errorMessage = error?.message || 'Failed to connect with SIP credentials';
       toast({
         title: "Connection Failed",
-        description: "Failed to connect with SIP credentials. Please check your username and password.",
+        description: errorMessage,
         variant: "destructive",
       });
     }

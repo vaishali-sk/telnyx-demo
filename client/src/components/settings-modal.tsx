@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,10 +64,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   }, [settings]);
 
   const handleSave = () => {
-    if (!credentials.telnyxApiKey.trim()) {
+    // Check if we have either API key or SIP credentials
+    const hasApiKey = credentials.telnyxApiKey.trim();
+    const hasSipCredentials = credentials.sipUsername.trim() && credentials.sipPassword.trim();
+    
+    if (!hasApiKey && !hasSipCredentials) {
       toast({
-        title: "Missing API Key",
-        description: "Please enter your Telnyx API key",
+        title: "Missing Credentials",
+        description: "Please provide either a Telnyx API key or SIP username/password",
         variant: "destructive",
       });
       return;
@@ -77,25 +81,39 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   };
 
   const handleTestConnection = async () => {
-    if (!credentials.telnyxApiKey.trim()) {
+    // Check if we have either API key or SIP credentials
+    const hasApiKey = credentials.telnyxApiKey.trim();
+    const hasSipCredentials = credentials.sipUsername.trim() && credentials.sipPassword.trim();
+    
+    if (!hasApiKey && !hasSipCredentials) {
       toast({
-        title: "Missing API Key",
-        description: "Please enter your Telnyx API key",
+        title: "Missing Credentials",
+        description: "Please provide either a Telnyx API key or SIP username/password",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      await initializeClient(credentials.telnyxApiKey);
-      toast({
-        title: "Connection Successful",
-        description: "Successfully connected to Telnyx WebRTC",
-      });
-    } catch (error) {
+      if (hasSipCredentials) {
+        // Test with SIP credentials (preferred for WebRTC)
+        await initializeClient(''); // Empty token triggers SIP mode
+        toast({
+          title: "Connection Successful",
+          description: "Successfully connected to Telnyx WebRTC with SIP credentials",
+        });
+      } else {
+        // Test with API key
+        await initializeClient(credentials.telnyxApiKey);
+        toast({
+          title: "Connection Attempted",
+          description: "API key tested. Note: SIP credentials work better for WebRTC.",
+        });
+      }
+    } catch (error: any) {
       toast({
         title: "Connection Failed",
-        description: "Unable to connect with the provided credentials",
+        description: error.message || "Unable to connect with the provided credentials",
         variant: "destructive",
       });
     }
@@ -139,6 +157,27 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           </TabsList>
 
           <TabsContent value="credentials" className="space-y-6">
+            <div className="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 mb-6">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-medium text-amber-200 mb-2">WebRTC Authentication</h3>
+                  <p className="text-xs text-amber-300 mb-2">
+                    <strong>For WebRTC calling, you need SIP credentials, not API keys.</strong>
+                  </p>
+                  <p className="text-xs text-amber-300 mb-1">
+                    Get SIP credentials from your Telnyx Portal:
+                  </p>
+                  <ol className="text-xs text-amber-300 list-decimal list-inside space-y-1 ml-2">
+                    <li>Go to Voice → SIP Trunking → IP Connections</li>
+                    <li>Create or select your IP Connection</li>
+                    <li>Go to Credentials tab</li>
+                    <li>Create SIP username and password</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label className="block text-sm font-medium mb-2">Telnyx API Key</Label>
               <Input
@@ -149,7 +188,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 className="bg-softphone-card border-softphone-border font-mono focus:ring-softphone-accent"
               />
               <p className="text-xs text-softphone-text-secondary mt-1">
-                Your Telnyx API key for WebRTC authentication
+                API key (won't work for WebRTC calling)
               </p>
             </div>
 
