@@ -35,16 +35,19 @@ export function useWebRTC() {
   // Auto-initialize client when settings are available
   useEffect(() => {
     if (settings && !client) {
-      // Prefer SIP credentials over API key
+      // Only use SIP credentials for WebRTC, ignore API keys
       if (settings.sipUsername && settings.sipPassword) {
+        console.log('Initializing with SIP credentials:', settings.sipUsername);
         const config = {
           username: settings.sipUsername,
           password: settings.sipPassword,
           debug: true
         };
         initializeClientWithConfig(config);
-      } else if (settings.telnyxApiKey) {
-        initializeClient(settings.telnyxApiKey);
+      } else {
+        console.log('No SIP credentials found. WebRTC requires SIP credentials, not API keys.');
+        // Don't try to initialize with API key for WebRTC
+        setCallState(prev => ({ ...prev, isConnected: false }));
       }
     }
   }, [settings, client]);
@@ -66,12 +69,22 @@ export function useWebRTC() {
           setCallState(prev => ({ ...prev, callStatus: 'connecting' }));
           break;
         case 'connected':
-          setCallState(prev => ({
-            ...prev,
-            callStatus: 'connected',
-            activeCall: telnyxClient.getActiveCall(),
-            incomingCall: null,
-          }));
+          // This handles both call connected and client connected events
+          if (event.callId) {
+            // Call connected
+            setCallState(prev => ({
+              ...prev,
+              callStatus: 'connected',
+              activeCall: telnyxClient.getActiveCall(),
+              incomingCall: null,
+            }));
+          } else {
+            // Client connected to Telnyx
+            setCallState(prev => ({
+              ...prev,
+              isConnected: true,
+            }));
+          }
           break;
         case 'ended':
           setCallState(prev => ({
@@ -90,10 +103,11 @@ export function useWebRTC() {
             callStatus: 'idle',
             activeCall: null,
             incomingCall: null,
+            isConnected: false,
           }));
           toast({
-            title: "Call Failed",
-            description: "Unable to establish the call",
+            title: "Connection Failed",
+            description: "Unable to establish connection to Telnyx",
             variant: "destructive",
           });
           break;

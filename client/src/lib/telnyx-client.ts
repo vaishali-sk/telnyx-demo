@@ -31,13 +31,15 @@ export class TelnyxClient {
 
     // Check if we have SIP credentials or token
     if (config.username && config.password) {
-      // Use SIP credentials
+      // Use SIP credentials - try different server configurations
       clientConfig = {
         ...clientConfig,
         login: config.username,
         passwd: config.password,
         realm: 'sip.telnyx.com',
-        host: 'sip.telnyx.com'
+        host: 'rtc.telnyx.com',
+        port: 7443,
+        wsServers: ['wss://rtc.telnyx.com:7443']
       };
       console.log('Using SIP credentials for WebRTC connection');
     } else if (config.token) {
@@ -57,11 +59,26 @@ export class TelnyxClient {
 
   private setupEventListeners() {
     this.client.on('telnyx.ready', () => {
-      console.log('Telnyx WebRTC client is ready');
+      console.log('✅ Telnyx WebRTC client is ready and connected!');
+      this.notifyListeners({ type: 'connected' });
     });
 
     this.client.on('telnyx.error', (error: any) => {
       console.error('Telnyx error:', error);
+      this.notifyListeners({ type: 'failed' });
+    });
+
+    this.client.on('telnyx.socket.open', () => {
+      console.log('Telnyx WebSocket connection opened');
+    });
+
+    this.client.on('telnyx.socket.close', (error: any) => {
+      console.log('Telnyx WebSocket connection closed', error);
+      this.notifyListeners({ type: 'failed' });
+    });
+
+    this.client.on('telnyx.socket.error', (error: any) => {
+      console.error('Telnyx WebSocket error:', error);
       this.notifyListeners({ type: 'failed' });
     });
 
@@ -246,7 +263,7 @@ export class TelnyxClient {
       this.notifyListeners({
         type: 'participant_left',
         callId: callId,
-        conferenceId: this.activeConferenceId
+        conferenceId: this.activeConferenceId || undefined
       });
     }
   }
